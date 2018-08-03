@@ -1,0 +1,9 @@
+---
+
+
+zookeeper_exporter_log_level: info
+zookeeper_exporter_log_dir: "{{ deploy_dir }}/log"
+zookeeper_exporter_log_filename: "zookeeper_exporter.log"
+
+zookeeper_port: "2181"
+zookeeper_exporter_port: "9141"

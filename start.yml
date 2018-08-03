@@ -1,0 +1,110 @@
+- hosts:
+    - prometheus_servers
+  tasks:
+    - name: start prometheus services
+      shell: cd {{ deploy_dir }}/scripts && ./start_prometheus-{{ prometheus_port }}.sh
+
+    - name: wait for prometheus up
+      wait_for: |
+        host={{ ansible_host }} port={{ prometheus_port }}
+        timeout=6 
+
+- hosts:
+    - alertmanager_servers
+  tasks:
+    - name: start alertmanager services
+      shell: cd {{ deploy_dir }}/scripts && ./start_alertmanager-{{ alertmanager_port }}.sh
+
+    - name: wait for alertmanager up
+      wait_for: |
+        host={{ ansible_host }} port={{ alertmanager_port }}
+        timeout=6 
+
+- hosts:
+    - pushgateway_servers
+  tasks:
+    - name: start pushgateway services
+      shell: cd {{ deploy_dir }}/scripts && ./start_pushgateway-{{ pushgateway_port }}.sh
+
+    - name: wait for pushgateway up
+      wait_for: |
+        host={{ ansible_host }} port={{ pushgateway_port }}
+        timeout=6 
+
+- hosts:
+    - blackbox_exporter_servers
+  tasks:
+    - name: start blackbox_exporter services
+      shell: cd {{ deploy_dir }}/scripts && ./start_blackbox_exporter-{{ blackbox_exporter_port }}.sh
+
+    - name: wait for blackbox_exporter up
+      wait_for: |
+        host={{ ansible_host }} port={{ blackbox_exporter_port }}
+        timeout=6 
+
+- hosts:
+    - node_exporter_servers
+  tasks:
+    - name: start node_exporter services
+      shell: cd {{ deploy_dir }}/scripts && ./start_node_exporter-{{ node_exporter_port }}.sh
+
+    - name: wait for node_exporter up
+      wait_for: |
+        host={{ ansible_host }} port={{ node_exporter_port }}
+        timeout=6 
+
+- hosts:
+    - cadvisor_servers
+  tasks:
+    - name: start cadvisor services
+      shell: cd {{ deploy_dir }}/scripts && ./start_cadvisor-{{ cadvisor_port }}.sh
+
+    - name: wait for cadvisor up
+      wait_for: |
+        host={{ ansible_host }} port={{ cadvisor_port }}
+        timeout=6 
+
+- hosts:
+    - process_exporter_servers
+  tasks:
+    - name: start process_exporter services
+      shell: cd {{ deploy_dir }}/scripts && ./start_process_exporter-{{ process_exporter_port }}.sh
+
+    - name: wait for process_exporter up
+      wait_for: |
+        host={{ ansible_host }} port={{ process_exporter_port }}
+        timeout=6 
+
+
+- hosts:
+    - elasticsearch_exporter_servers
+  tasks:
+    - name: start elasticsearch_exporter services
+      shell: cd {{ deploy_dir }}/scripts && ./start_elasticsearch_exporter-{{ elasticsearch_exporter_port }}.sh
+
+    - name: wait for elasticsearch_exporter up
+      wait_for: |
+        host={{ ansible_host }} port={{ elasticsearch_exporter_port }}
+        timeout=6 
+
+- hosts:
+    - kafka_exporter_servers
+  tasks:
+    - name: start kafka_exporter services
+      shell: cd {{ deploy_dir }}/scripts && ./start_kafka_exporter-{{ kafka_exporter_port }}.sh
+
+    - name: wait for kafka_exporter up
+      wait_for: |
+        host={{ ansible_host }} port={{ kafka_exporter_port }}
+        timeout=6 
+
+- hosts:
+    - zookeeper_exporter_servers
+  tasks:
+    - name: start zookeeper_exporter services
+      shell: cd {{ deploy_dir }}/scripts && ./start_zookeeper_exporter-{{ zookeeper_exporter_port }}.sh
+
+    - name: wait for zookeeper_exporter up
+      wait_for: |
+        host={{ ansible_host }} port={{ zookeeper_exporter_port }}
+        timeout=6 

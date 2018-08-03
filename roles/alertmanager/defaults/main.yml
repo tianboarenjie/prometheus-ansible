@@ -1,0 +1,10 @@
+---
+
+alertmanager_data_dir: "{{ deploy_dir }}/alertmanager.data.metrics"
+
+alertmanager_log_level: info
+alertmanager_log_dir: "{{ deploy_dir }}/log"
+alertmanager_log_filename: "alertmanager.log"
+alertmanager_conf_filename: "alertmanager.yml"
+
+#alertmanager_port: "9093"

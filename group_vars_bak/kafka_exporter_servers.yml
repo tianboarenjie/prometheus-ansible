@@ -1,0 +1,11 @@
+---
+
+
+kafka_exporter_log_level: info
+kafka_exporter_log_dir: "{{ deploy_dir }}/log"
+kafka_exporter_log_filename: "kafka_exporter.log"
+
+kafka_port: "9092"
+kafka_version: "1.0.0"
+
+kafka_exporter_port: "9308"

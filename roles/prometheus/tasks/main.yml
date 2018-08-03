@@ -1,0 +1,62 @@
+---
+
+- name: create deploy directories
+  file: path={{ item }} state=directory mode=0755 owner={{ deploy_user }} group={{ deploy_user }}
+  with_items:
+  - "{{ prometheus_log_dir }}"
+  - "{{ prometheus_data_dir }}"
+  - "{{ deploy_dir }}/status/{{ role_name }}"
+  - "{{ deploy_dir }}/conf"
+  - "{{ deploy_dir }}/bin"
+  - "{{ deploy_dir }}/scripts"
+
+- name: create configuration file
+  template: src=prometheus.yml.j2 dest={{ deploy_dir }}/conf/prometheus.yml mode=0644 backup=yes owner={{ deploy_user }} group={{ deploy_user }}
+
+- name: copy alert rules file
+  copy: src={{ item }} dest={{ deploy_dir }}/conf/{{ item }} mode=0644 backup=yes
+  with_items:
+    - node.rules.yml
+    - blacker.rules.yml
+    - bypass.rules.yml
+    - docker.rules.yml
+    - elasticsearch.rules.yml
+    - kafka.rules.yml
+    - process.rules.yml
+
+- name: deploy prometheus binary
+  copy: src="{{ resources_dir }}/bin/prometheus" dest="{{ deploy_dir }}/bin/" mode=0755 owner={{ deploy_user }} group={{ deploy_user }}
+
+- name: create run script
+  template:
+    src: "{{ item }}_{{ role_name }}_binary.sh.j2"
+    dest: "{{ deploy_dir }}/scripts/{{ item }}_{{ role_name }}-{{ prometheus_port }}.sh"
+    mode: "0755"
+    backup: yes
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_user }}"
+  with_items:
+    - run
+
+- name: create systemd service configuration
+  template: src="prometheus.service.j2" dest="/etc/systemd/system/{{ role_name }}-{{ prometheus_port }}.service" mode=0644
+
+- name: create startup script - common start/stop
+  template:
+    src: "{{ item }}_role.sh.j2"
+    dest: "{{ deploy_dir }}/scripts/{{ item }}_{{ role_name }}-{{ prometheus_port }}.sh"
+    mode: "0755"
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_user }}"
+  with_items:
+    - start
+    - stop
+
+- name: reload systemd
+  shell: "systemctl daemon-reload"
+
+- name: enable startup
+  shell: "systemctl enable {{ role_name }}-{{ prometheus_port }}.service"
+
+- name: start service
+  shell: "systemctl start {{ role_name }}-{{ prometheus_port }}.service" 

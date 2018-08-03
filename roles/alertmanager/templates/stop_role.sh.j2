@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+
+sudo systemctl stop {{ role_name }}-{{ alertmanager_port }}.service
+

@@ -1,0 +1,9 @@
+---
+
+
+elasticsearch_exporter_log_level: info
+elasticsearch_exporter_log_dir: "{{ deploy_dir }}/log"
+elasticsearch_exporter_log_filename: "elasticsearch_exporter.log"
+
+
+#elasticsearch_exporter_port: "9108"

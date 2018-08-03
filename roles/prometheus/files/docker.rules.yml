@@ -1,0 +1,12 @@
+groups:
+- name: alert.rules
+  rules:
+  - alert: Container exit
+    expr: changes(container_last_seen{name=~"..*"}[3m]) < 1
+    for: 3m
+    labels:
+      level: warning
+      expr: changes(container_last_seen{name=~"..*"}[3m]) < 1
+    annotations:
+      description: "alert: instance: {{ $labels.instance }} Docker: {{ $labels.name }} exit"
+      summary: Docker exit

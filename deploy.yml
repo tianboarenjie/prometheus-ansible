@@ -1,0 +1,57 @@
+---
+
+- name: propare environment
+  hosts: all
+  roles:
+    - bootstrap
+
+- name: deploying prometheus
+  hosts: prometheus_servers
+  roles:
+    - prometheus
+
+- name: deploying alertmanager
+  hosts: alertmanager_servers
+  roles:
+    - alertmanager
+
+- name: deploying pushgateway
+  hosts: pushgateway_servers
+  roles:
+    - pushgateway
+
+- name: deploying node_exporter
+  hosts: node_exporter_servers
+  roles:
+    - node_exporter
+
+- name: deploying blackbox_exporter
+  hosts: blackbox_exporter_servers
+  roles:
+    - blackbox_exporter
+
+- name: deploying process_exporter
+  hosts: process_exporter_servers
+  roles:
+    - process_exporter
+
+
+- name: deploying cadvisor
+  hosts: cadvisor_servers
+  roles:
+    - cadvisor
+
+- name: deploying elasticsearch_exporter
+  hosts: elasticsearch_exporter_servers
+  roles:
+    - elasticsearch_exporter
+
+- name: deploying zookeeper_exporter
+  hosts: zookeeper_exporter_servers
+  roles:
+    - zookeeper_exporter
+
+- name: deploying kafka_exporter
+  hosts: kafka_exporter_servers
+  roles:
+    - kafka_exporter

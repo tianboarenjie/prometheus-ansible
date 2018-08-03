@@ -1,0 +1,23 @@
+---
+
+- hosts: all
+  user: root
+  tasks:
+    - name: create user
+      user: name={{ deploy_user }} password=Paic1234 shell=/bin/bash createhome=yes
+
+    
+    - name: remove attr privileges 
+      shell: chattr -i /etc/sudoers
+
+
+    - name: update sudoers file
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: '{{ deploy_user }}     ALL=(ALL)     NOPASSWD: /bin/sh,/usr/bin/python,/usr/bin/systemctl start prometheus-{{ prometheus_port }}\\.service,/usr/bin/systemctl status prometheus-{{ prometheus_port }}\\.service,/usr/bin/systemctl stop prometheus-{{ prometheus_port }}\\.service,/usr/bin/systemctl start node_exporter-{{ node_exporter_port }}\\.service,/usr/bin/systemctl status node_exporter-{{ node_exporter_port }}\\.service,/usr/bin/systemctl stop node_exporter-{{ node_exporter_port }}\\.service,/usr/bin/systemctl start process_exporter-{{ process_exporter_port }}\\.service,/usr/bin/systemctl status process_exporter-{{ process_exporter_port }}\\.service,/usr/bin/systemctl stop process_exporter-{{ process_exporter_port }}\\.service,/usr/bin/systemctl start cadvisor-{{ cadvisor_port }}\\.service,/usr/bin/systemctl status cadvisor-{{ cadvisor_port }}\\.service,/usr/bin/systemctl stop cadvisor-{{ cadvisor_port }}\\.service,/usr/bin/systemctl start pushgateway-{{ pushgateway_port }}\\.service,/usr/bin/systemctl status pushgateway-{{ pushgateway_port }}\\.service,/usr/bin/systemctl stop pushgateway-{{ pushgateway_port }}\\.service,/usr/bin/systemctl start kafka_exporter-{{ kafka_exporter_port }}\\.service,/usr/bin/systemctl status kafka_exporter-{{ kafka_exporter_port }}\\.service,/usr/bin/systemctl stop kafka_exporter-{{ kafka_exporter_port }}\\.service,/usr/bin/systemctl start elasticsearch_exporter-{{ elasticsearch_exporter_port }}\\.service,/usr/bin/systemctl status elasticsearch_exporter-{{ elasticsearch_exporter_port }}\\.service,/usr/bin/systemctl stop elasticsearch_exporter-{{ elasticsearch_exporter_port }}\\.service,/usr/bin/systemctl start zookeeper_exporter-{{ zookeeper_exporter_port }}\\.service,/usr/bin/systemctl status zookeeper_exporter-{{ zookeeper_exporter_port }}\\.service,/usr/bin/systemctl stop zookeeper_exporter-{{ zookeeper_exporter_port }}\\.service,/usr/bin/systemctl start blackbox_exporter-{{ blackbox_exporter_port }}\\.service,/usr/bin/systemctl stop blackbox_exporter-{{ blackbox_exporter_port }}\\.service,/usr/bin/systemctl status blackbox_exporter-{{ blackbox_exporter_port }}\\.service,/usr/bin/systemctl start alertmanager-{{ alertmanager_port }}\\.service,/usr/bin/systemctl status alertmanager-{{ alertmanager_port }}\\.service,/usr/bin/systemctl stop alertmanager-{{ alertmanager_port }}\\.service'
+        regexp: '^{{ deploy_user }} .*'
+        state: present
+
+    - name: add attr privileges 
+      shell: chattr +i /etc/sudoers

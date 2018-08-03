@@ -1,0 +1,18 @@
+#!/bin/bash
+set -e
+ulimit -n 1000000
+
+DEPLOY_DIR={{ deploy_dir }}
+cd "${DEPLOY_DIR}" || exit 1
+
+{% set my_ip = hostvars[inventory_hostname].ansible_host | default(hostvars[inventory_hostname].inventory_hostname) -%}
+
+exec > >(tee -i -a "{{ kafka_exporter_log_dir }}/{{ kafka_exporter_log_filename }}")
+exec 2>&1
+
+exec bin/kafka_exporter \
+    --web.listen-address=":{{ kafka_exporter_port }}" \
+    --kafka.version="{{ kafka_version }}" \
+    --kafka.server="{{ my_ip }}:{{ kafka_port }}" \
+    --log.level="{{ kafka_exporter_log_level }}"
+

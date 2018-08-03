@@ -1,0 +1,8 @@
+---
+
+process_exporter_conf_filename: "process.yml"
+process_exporter_log_level: info
+process_exporter_log_dir: "{{ deploy_dir }}/log"
+process_exporter_log_filename: "process_exporter.log"
+
+#process_exporter_port: "9256"

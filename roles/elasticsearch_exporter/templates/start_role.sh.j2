@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+
+sudo systemctl start {{ role_name }}-{{ elasticsearch_exporter_port }}.service
+

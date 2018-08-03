@@ -1,0 +1,208 @@
+---
+global:
+  scrape_interval:     60s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 60s # By default, scrape targets every 15 seconds.
+  # scrape_timeout is set to the global default (10s).
+  external_labels:
+    cluster: '{{ cluster_name }}'
+{% for item in prometheus_extra_labels %}
+    {{ item.label }}: "{{ item.value }}"
+{% endfor %}
+{% set my_ip = hostvars[inventory_hostname].ansible_host | default(hostvars[inventory_hostname].inventory_hostname) -%}
+
+rule_files:
+  - 'node.rules.yml'
+  - 'blacker.rules.yml'
+  - 'bypass.rules.yml'
+  - 'docker.rules.yml'
+  - 'elasticsearch.rules.yml'
+  - 'kafka.rules.yml'
+  - 'process.rules.yml'
+
+{% set alertmanager_host = hostvars[groups.alertmanager_servers[0]].ansible_host | default(hostvars[groups.alertmanager_servers[0]].inventory_hostname) if groups.get("alertmanager_servers", []) else "" -%}
+{% set alertmanager_port = hostvars[groups.alertmanager_servers[0]].alertmanager_port if alertmanager_host else "" -%}
+
+{% set pushgateway_host = groups["pushgateway_servers"] | list if groups["pushgateway_servers"] else "" %}
+{% set pushgateway_port = hostvars[groups.pushgateway_servers[0]].pushgateway_port if pushgateway_host else "" -%}
+
+{% set blackbox_exporter_host = groups["blackbox_exporter_servers"] | list if groups["blackbox_exporter_servers"] else "" %}
+{% set blackbox_exporter_port = hostvars[groups.blackbox_exporter_servers[0]].blackbox_exporter_port if blackbox_exporter_host else "" -%}
+
+{% set cadvisor_host = groups["cadvisor_servers"] | list if groups["cadvisor_servers"] else "" %}
+{% set cadvisor_port = hostvars[groups.cadvisor_servers[0]].cadvisor_port if cadvisor_host else "" -%}
+
+{% set elasticsearch_exporter_host = groups["elasticsearch_exporter_servers"] | list if groups["elasticsearch_exporter_servers"] else "" %}
+{% set elasticsearch_exporter_port = hostvars[groups.elasticsearch_exporter_servers[0]].elasticsearch_exporter_port if elasticsearch_exporter_host else "" -%}
+
+{% set kafka_exporter_host = groups["kafka_exporter_servers"] | list if groups["kafka_exporter_servers"] else "" %}
+{% set kafka_exporter_port = hostvars[groups.kafka_exporter_servers[0]].kafka_exporter_port if kafka_exporter_host else "" -%}
+
+{% set node_exporter_host = groups["node_exporter_servers"] | list if groups["node_exporter_servers"] else "" %}
+{% set node_exporter_port = hostvars[groups.node_exporter_servers[0]].node_exporter_port if node_exporter_host else "" -%}
+
+{% set process_exporter_host = groups["process_exporter_servers"] | list if groups["process_exporter_servers"] else "" %}
+{% set process_exporter_port = hostvars[groups.process_exporter_servers[0]].process_exporter_port if process_exporter_host else "" -%}
+
+{% set zookeeper_exporter_host = groups["zookeeper_exporter_servers"] | list if groups["zookeeper_exporter_servers"] else "" %}
+{% set zookeeper_exporter_port = hostvars[groups.zookeeper_exporter_servers[0]].zookeeper_exporter_port if zookeeper_exporter_host else "" -%}
+
+
+
+{% if alertmanager_port %}
+alerting:
+  alertmanagers:
+  - static_configs:
+    - targets:
+      - "{{ alertmanager_host }}:{{ alertmanager_port }}"
+{% else %}
+# alerting:
+#  alertmanagers:
+#  - static_configs:
+#    - targets:
+#      - 'alertmanager_host:9093'
+{% endif %}
+
+scrape_configs:
+  - job_name: "prometheus"
+    scrape_interval: 60s
+    honor_labels: true
+    static_configs:
+    - targets:
+      - "{{ my_ip }}:9090"
+
+{% if pushgateway_port %}
+  - job_name: "pushgateway"
+    scrape_interval: 60s
+    honor_labels: true
+    static_configs:
+    - targets:
+{% for host in pushgateway_host %}
+{% set ip = hostvars[host].ansible_host | default(hostvars[host].inventory_hostname) %}
+      - "{{ ip }}:{{ pushgateway_port }}"
+{% endfor %}
+{% endif %}
+
+{% if node_exporter_port %}
+  - job_name: node_exporters
+    scrape_interval: 60s
+    honor_labels: true
+    static_configs:
+    - targets:
+{% for host in node_exporter_host %}
+{% set ip = hostvars[host].ansible_host | default(hostvars[host].inventory_hostname) %}
+      - "{{ ip }}:{{ node_exporter_port }}"
+{% endfor %}
+{% endif %}
+
+{% for host in blackbox_exporter_host %}
+{% set ip = hostvars[host].ansible_host | default(hostvars[host].inventory_hostname) %}
+{% if blackbox_exporter_port %}
+  - job_name: blackbox_exporters_{{ ip }}_icmp
+    scrape_interval: 6s
+    metrics_path: /probe
+    params:
+      module: [icmp]
+    static_configs:
+    - targets:
+{% for host1 in blackbox_exporter_host %}
+{% set bl_ip1 = hostvars[host1].ansible_host | default(hostvars[host1].inventory_hostname) %}
+      - "{{ bl_ip1 }}:{{ blackbox_exporter_port }}"
+{% endfor %}
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: (.*)(:80)?
+        target_label: __param_target
+        replacement: ${1}
+      - source_labels: [__param_target]
+        regex: (.*)
+        target_label: ping
+        replacement: ${1}
+      - target_label: __address__
+        replacement: "{{ ip }}:{{ blackbox_exporter_port }}"
+        
+{% endif %}
+{% endfor %}
+
+{% for host in blackbox_exporter_host %}
+{% set ip = hostvars[host].ansible_host | default(hostvars[host].inventory_hostname) %}
+{% if blackbox_exporter_port %}
+  - job_name: blackbox_exporters_{{ ip }}_http
+    scrape_interval: 30s
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+    - targets:
+{% for host in pushgateway_host %}
+{% set pu_ip = hostvars[host].ansible_host | default(hostvars[host].inventory_hostname) %}
+      - "http://{{ pu_ip }}:{{ pushgateway_port }}/metrics"
+{% endfor %}
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: "{{ ip }}:{{ blackbox_exporter_port }}"
+{% endif %}
+{% endfor %}
+
+{% if process_exporter_port %}
+  - job_name: process_exporters
+    scrape_interval: 60s
+    honor_labels: true
+    static_configs:
+    - targets:
+{% for host in process_exporter_host %}
+{% set ip = hostvars[host].ansible_host | default(hostvars[host].inventory_hostname) %}
+      - "{{ ip }}:{{ process_exporter_port }}"
+{% endfor %}
+{% endif %}
+
+{% if cadvisor_port %}
+  - job_name: cadvisors
+    scrape_interval: 60s
+    honor_labels: true
+    static_configs:
+    - targets:
+{% for host in cadvisor_host %}
+{% set ip = hostvars[host].ansible_host | default(hostvars[host].inventory_hostname) %}
+      - "{{ ip }}:{{ cadvisor_port }}"
+{% endfor %}
+{% endif %}
+
+{% if elasticsearch_exporter_port %}
+  - job_name: elasticsearch_exporters
+    scrape_interval: 60s
+    honor_labels: true
+    static_configs:
+    - targets:
+{% for host in elasticsearch_exporter_host %}
+{% set ip = hostvars[host].ansible_host | default(hostvars[host].inventory_hostname) %}
+      - "{{ ip }}:{{ elasticsearch_exporter_port }}"
+{% endfor %}
+{% endif %}
+
+{% if kafka_exporter_port %}
+  - job_name: kafka_exporters
+    scrape_interval: 60s
+    honor_labels: true
+    static_configs:
+    - targets:
+{% for host in kafka_exporter_host %}
+{% set ip = hostvars[host].ansible_host | default(hostvars[host].inventory_hostname) %}
+      - "{{ ip }}:{{ kafka_exporter_port }}"
+{% endfor %}
+{% endif %}
+
+{% if zookeeper_exporter_port %}
+  - job_name: zookeeper_exporters
+    scrape_interval: 60s
+    honor_labels: true
+    static_configs:
+    - targets:
+{% for host in zookeeper_exporter_host %}
+{% set ip = hostvars[host].ansible_host | default(hostvars[host].inventory_hostname) %}
+      - "{{ ip }}:{{ zookeeper_exporter_port }}"
+{% endfor %}
+{% endif %}

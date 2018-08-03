@@ -1,0 +1,10 @@
+groups:
+- name: alert.rules
+  rules:
+  - alert: Process quit
+    expr: namedprocess_namegroup_num_procs < 0
+    labels:
+      level: warning
+      expr: namedprocess_namegroup_num_procs < 0
+    annotations:
+      descriptions: "alert: instalce {{ $labels.instance }} Process {{ $labels.groupname }} quit"

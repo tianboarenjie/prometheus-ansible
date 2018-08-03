@@ -1,0 +1,19 @@
+---
+
+process_names:
+  
+  - name: "zookeeper"
+    cmdline:
+    - -Dzookeeper.root.logger=INFO
+
+  - name: "kafka"
+    cmdline:
+    - kafka.Kafka
+
+  - name: "kafka consumer"
+    cmdline:
+    - kafka.tools.ConsoleConsumer
+
+  - name: "elasticsearch"
+    cmdline:
+    - org.elasticsearch.bootstrap.Elasticsearch

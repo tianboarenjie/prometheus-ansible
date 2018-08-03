@@ -1,0 +1,7 @@
+---
+
+pushgateway_log_level: info
+pushgateway_log_dir: "{{ deploy_dir }}/log"
+pushgateway_log_filename: "pushgateway.log"
+
+pushgateway_port: "9091"

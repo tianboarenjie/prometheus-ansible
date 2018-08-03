@@ -1,0 +1,16 @@
+[Unit]
+Description={{ role_name }}-{{ alertmanager_port }} service
+After=syslog.target network.target remote-fs.target nss-lookup.target
+
+[Service]
+CPUShares=2048
+MemoryLimit=4G
+LimitNOFILE=1000000
+User={{ deploy_user }}
+ExecStart={{ deploy_dir }}/scripts/run_{{ role_name }}-{{ alertmanager_port }}.sh
+Restart=always
+RestartSec=15s
+
+[Install]
+WantedBy=multi-user.target
+

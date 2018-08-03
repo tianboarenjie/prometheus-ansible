@@ -1,0 +1,49 @@
+---
+
+- name: create deploy directories
+  file: path={{ item }} state=directory mode=0755 owner={{ deploy_user }} group={{ deploy_user }}
+  with_items:
+  - "{{ blackbox_exporter_log_dir }}"
+  - "{{ deploy_dir }}/conf"
+  - "{{ deploy_dir }}/bin"
+  - "{{ deploy_dir }}/scripts"
+
+- name: create configuration file
+  copy: src={{ conf_dir }}/{{ blackbox_exporter_conf_filename }} dest={{ deploy_dir }}/conf/{{ blackbox_exporter_conf_filename }} mode=0644 backup=yes owner={{ deploy_user }} group={{ deploy_user }}
+
+- name: deploy blackbox_exporter binary
+  copy: src="{{ resources_dir }}/bin/blackbox_exporter" dest="{{ deploy_dir }}/bin/" mode=0755 owner={{ deploy_user }} group={{ deploy_user }}
+
+- name: create run script
+  template:
+    src: "{{ item }}_{{ role_name }}_binary.sh.j2"
+    dest: "{{ deploy_dir }}/scripts/{{ item }}_{{ role_name }}-{{ blackbox_exporter_port }}.sh"
+    mode: "0755"
+    backup: yes
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_user }}"
+  with_items:
+    - run
+
+- name: create systemd service configuration
+  template: src="blackbox_exporter.service.j2" dest="/etc/systemd/system/{{ role_name }}-{{ blackbox_exporter_port }}.service" mode=0644
+
+- name: create startup script - common start/stop
+  template:
+    src: "{{ item }}_role.sh.j2"
+    dest: "{{ deploy_dir }}/scripts/{{ item }}_{{ role_name }}-{{ blackbox_exporter_port }}.sh"
+    mode: "0755"
+    owner: "{{ deploy_user }}"
+    group: "{{ deploy_user }}"
+  with_items:
+    - start
+    - stop
+
+- name: reload systemd
+  shell: "systemctl daemon-reload"
+
+- name: enable startup
+  shell: "systemctl enable {{ role_name }}-{{ blackbox_exporter_port }}.service"
+
+- name: start service
+  shell: "systemctl start {{ role_name }}-{{ blackbox_exporter_port }}.service" 

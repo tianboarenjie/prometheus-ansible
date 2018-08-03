@@ -1,0 +1,11 @@
+---
+
+cadvisor_log_level: info
+cadvisor_log_dir: "{{ deploy_dir }}/log"
+cadvisor_log_filename: "cadvisor.log"
+
+cadvisor_docker: "unix:////var/run/docker.sock"
+cadvisor_docker_root_dir: "/var/lib/docker"
+
+
+cadvisor_port: "8082"
